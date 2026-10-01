@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <title>作品導覽</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: transparent; }
+    body { font-family: system-ui, -apple-system, "Noto Sans TC", sans-serif; color: #292929; }
+    .portfolio-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; width: 100%; max-width: 992px; margin: 0 auto; padding: 4px 0 14px; }
+    .portfolio-item { display: block; min-width: 0; color: inherit; text-decoration: none; }
+    .picture { position: relative; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: #f1f1ef; }
+    .picture img { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .hover-image { opacity: 0; transition: opacity .22s ease; }
+    .image-message { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; color: #666; font-size: 14px; }
+    .title { margin: 12px 0 0; font-size: 18px; font-weight: 500; line-height: 1.5; text-align: center; overflow-wrap: anywhere; white-space: pre-line; }
+    .portfolio-item:focus-visible { outline: 3px solid #2458d3; outline-offset: -3px; }
+    @media (hover: hover) and (pointer: fine) {
+      .portfolio-item:hover .hover-image.ready, .portfolio-item:focus-visible .hover-image.ready { opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) { .hover-image { transition: none; } }
+    @media (max-width: 767px) {
+      .portfolio-links { display: flex; flex-wrap: nowrap; gap: 12px; overflow-x: auto; scroll-snap-type: x proximity; padding-right: 18px; scrollbar-width: thin; }
+      .portfolio-item { flex: 0 0 clamp(260px, 82vw, 320px); scroll-snap-align: start; }
+    }
+    #status { margin: 16px; text-align: center; font-size: 14px; color: #666; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <p id="status" role="status">正在載入作品…</p>
+  <nav id="cards" class="portfolio-links" aria-label="作品導覽，可左右滑動" aria-busy="true"></nav>
+  <noscript>請啟用 JavaScript 以查看作品。</noscript>
+  <script>
+    // ===== 按鈕內容設定：平常只需要修改這一區 =====
+    // 每一組依序是左、中、右；手機版則依此順序左右滑動。
+    // 所有網址請使用 https://；修改時保留引號與逗號。
+    const cards = [
+      { // 第 1 張按鈕：Kids Potato
+        title: 'Kids Potato', // 圖片下方顯示的標題
+        image: 'https://cdn.myportfolio.com/16928982-5509-4edd-95c8-6e0f5a6d867d/cc1efbb3-5e91-4757-82b8-ee7bb0f03d8c_rw_1200.jpg?h=fe6da259212849818fdd3af2cf8962fa', // 一般圖片：放公開的圖片直連網址
+        hoverImage: '', // 滑鼠移入後的圖片網址；留空就保持原圖
+        link: 'https://whimofthecat.myportfolio.com/kids-potato' // 點擊按鈕要前往的頁面網址；留空則不能點擊
+      },
+      { // 第 2 張按鈕：Joy Friends
+        title: 'Joy Friends', // 圖片下方顯示的標題
+        image: 'https://cdn.myportfolio.com/16928982-5509-4edd-95c8-6e0f5a6d867d/5f6cc29f-686e-4e95-b36a-c56b28008b2d_rw_600.jpg?h=8cef9a31397704967071f545f5d230b4', // 一般圖片：放公開的圖片直連網址
+        hoverImage: '', // 滑鼠移入後的圖片網址；留空就保持原圖
+        link: 'https://whimofthecat.myportfolio.com/joy-friends' // 點擊按鈕要前往的頁面網址；留空則不能點擊
+      },
+      { // 第 3 張按鈕：Shubalaxy
+        title: 'Shubalaxy', // 圖片下方顯示的標題
+        image: 'https://cdn.myportfolio.com/16928982-5509-4edd-95c8-6e0f5a6d867d/efa39088-1003-49d6-860a-878888653fa7_rw_1200.jpg?h=930be95183a8a75d1024005877b01eec', // 一般圖片：放公開的圖片直連網址
+        hoverImage: '', // 滑鼠移入後的圖片網址；留空就保持原圖
+        link: 'https://whimofthecat.myportfolio.com/shubalaxy' // 點擊按鈕要前往的頁面網址；留空則不能點擊
+      },
+    ];
+    // ===== 以下是顯示及換圖功能，一般修改連結時不用動 =====
+    const container = document.getElementById('cards');
+    const status = document.getElementById('status');
+    function safeUrl(value) {
+      try { const url = new URL(value); return url.protocol === 'https:' ? url.href : ''; }
+      catch (_) { return ''; }
+    }
+    function renderCards(cards) {
+      container.replaceChildren();
+      cards.slice(0, 3).forEach(function(card) {
+        const link = safeUrl(card.link);
+        const item = document.createElement(link ? 'a' : 'article');
+        item.className = 'portfolio-item';
+        if (link) { item.href = link; item.target = '_blank'; item.rel = 'noopener noreferrer'; }
+        const picture = document.createElement('div');
+        picture.className = 'picture';
+        const message = document.createElement('span');
+        message.className = 'image-message';
+        message.textContent = '圖片尚未設定或無法載入';
+        message.hidden = true;
+        picture.append(message);
+        const mainUrl = safeUrl(card.image);
+        if (mainUrl) {
+          const img = document.createElement('img');
+          img.alt = ''; // 同一連結下已有完整標題，避免螢幕閱讀器重複朗讀。
+          img.width = img.height = 640;
+          img.addEventListener('error', function() { img.hidden = true; message.hidden = false; });
+          img.src = mainUrl;
+          picture.append(img);
+        } else { message.hidden = false; }
+        const hoverUrl = safeUrl(card.hoverImage);
+        if (hoverUrl && hoverUrl !== mainUrl) {
+          const hover = document.createElement('img');
+          hover.className = 'hover-image'; hover.alt = ''; hover.setAttribute('aria-hidden', 'true');
+          hover.width = hover.height = 640;
+          hover.addEventListener('load', function() { hover.classList.add('ready'); });
+          hover.addEventListener('error', function() { hover.remove(); });
+          hover.src = hoverUrl;
+          picture.append(hover);
+        }
+        const title = document.createElement('h2');
+        title.className = 'title';
+        title.textContent = card.title;
+        item.append(picture, title);
+        container.append(item);
+      });
+      container.setAttribute('aria-busy', 'false');
+      status.hidden = true;
+    }
+    // 直接使用上方設定，不讀取試算表，也不呼叫 GAS。
+    renderCards(cards);
+  </script>
+</body>
+</html>
